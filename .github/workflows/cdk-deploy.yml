@@ -14,8 +14,6 @@ permissions:
 
 jobs:
   deploy-infra:
-    env:
-      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,22 +29,74 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Normalizar credenciales AWS
+        id: aws_cred
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID_RAW: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY_RAW: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN_RAW: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION_RAW: ${{ secrets.AWS_REGION }}
+        run: |
+          limpiar() {
+            local valor="$1"
+            valor="$(printf '%s' "$valor" | tr -d '\r\n')"
+            valor="$(printf '%s' "$valor" | sed -e 's/^\"//' -e 's/\"$//')"
+            echo -n "$valor"
+          }
+
+          ACCESS_KEY_ID="$(limpiar "$AWS_ACCESS_KEY_ID_RAW")"
+          SECRET_ACCESS_KEY="$(limpiar "$AWS_SECRET_ACCESS_KEY_RAW")"
+          SESSION_TOKEN="$(limpiar "$AWS_SESSION_TOKEN_RAW")"
+          AWS_REGION="$(limpiar "$AWS_REGION_RAW")"
+
+          if [[ -z "$ACCESS_KEY_ID" || -z "$SECRET_ACCESS_KEY" || -z "$AWS_REGION" ]]; then
+            echo "Faltan secrets AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY o AWS_REGION" >&2
+            exit 1
+          fi
+
+          if [[ "$ACCESS_KEY_ID" == ASIA* && -z "$SESSION_TOKEN" ]]; then
+            echo "Credencial temporal detectada (ASIA) sin AWS_SESSION_TOKEN" >&2
+            exit 1
+          fi
+
+          if [[ "$ACCESS_KEY_ID" == AKIA* ]]; then
+            # Clave permanente: ignora token para evitar token invalido.
+            SESSION_TOKEN=""
+          fi
+
+          echo "::add-mask::$ACCESS_KEY_ID"
+          echo "::add-mask::$SECRET_ACCESS_KEY"
+          if [[ -n "$SESSION_TOKEN" ]]; then
+            echo "::add-mask::$SESSION_TOKEN"
+          fi
+
+          echo "access_key=$ACCESS_KEY_ID" >> "$GITHUB_OUTPUT"
+          echo "secret_key=$SECRET_ACCESS_KEY" >> "$GITHUB_OUTPUT"
+          echo "session_token=$SESSION_TOKEN" >> "$GITHUB_OUTPUT"
+          echo "region=$AWS_REGION" >> "$GITHUB_OUTPUT"
+          if [[ -n "$SESSION_TOKEN" ]]; then
+            echo "usa_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "usa_token=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Configurar AWS (credenciales temporales)
-        if: env.AWS_SESSION_TOKEN != ''
+        if: steps.aws_cred.outputs.usa_token == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ steps.aws_cred.outputs.access_key }}
+          aws-secret-access-key: ${{ steps.aws_cred.outputs.secret_key }}
+          aws-session-token: ${{ steps.aws_cred.outputs.session_token }}
+          aws-region: ${{ steps.aws_cred.outputs.region }}
 
       - name: Configurar AWS (credenciales permanentes)
-        if: env.AWS_SESSION_TOKEN == ''
+        if: steps.aws_cred.outputs.usa_token == 'false'
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ steps.aws_cred.outputs.access_key }}
+          aws-secret-access-key: ${{ steps.aws_cred.outputs.secret_key }}
+          aws-region: ${{ steps.aws_cred.outputs.region }}
 
       - name: Validar identidad AWS
         run: aws sts get-caller-identity
