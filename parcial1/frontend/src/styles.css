@@ -1,0 +1,93 @@
+:root {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #1f2937;
+  background: linear-gradient(160deg, #f6efe4 0%, #eef5fb 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.contenedor {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.grid-principal {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.tarjeta {
+  border: 1px solid #d4d4d8;
+  border-radius: 10px;
+  padding: 16px;
+  background: #ffffff;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+input,
+select,
+button {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #c4c4c4;
+  font-size: 14px;
+}
+
+button {
+  background: #0f766e;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.alerta {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.alerta.exito {
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.alerta.error {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px;
+  text-align: left;
+}

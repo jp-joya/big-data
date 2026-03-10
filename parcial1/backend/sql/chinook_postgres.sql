@@ -1,0 +1,98 @@
+-- Esquema basado en Chinook para PostgreSQL.
+CREATE TABLE IF NOT EXISTS "Artist" (
+  "ArtistId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "Name" VARCHAR(120)
+);
+
+CREATE TABLE IF NOT EXISTS "Album" (
+  "AlbumId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "Title" VARCHAR(160) NOT NULL,
+  "ArtistId" INTEGER NOT NULL REFERENCES "Artist"("ArtistId")
+);
+
+CREATE TABLE IF NOT EXISTS "Genre" (
+  "GenreId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "Name" VARCHAR(120)
+);
+
+CREATE TABLE IF NOT EXISTS "MediaType" (
+  "MediaTypeId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "Name" VARCHAR(120)
+);
+
+CREATE TABLE IF NOT EXISTS "Employee" (
+  "EmployeeId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "LastName" VARCHAR(20) NOT NULL,
+  "FirstName" VARCHAR(20) NOT NULL,
+  "Title" VARCHAR(30),
+  "ReportsTo" INTEGER REFERENCES "Employee"("EmployeeId"),
+  "BirthDate" TIMESTAMP,
+  "HireDate" TIMESTAMP,
+  "Address" VARCHAR(70),
+  "City" VARCHAR(40),
+  "State" VARCHAR(40),
+  "Country" VARCHAR(40),
+  "PostalCode" VARCHAR(10),
+  "Phone" VARCHAR(24),
+  "Fax" VARCHAR(24),
+  "Email" VARCHAR(60)
+);
+
+CREATE TABLE IF NOT EXISTS "Customer" (
+  "CustomerId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "FirstName" VARCHAR(40) NOT NULL,
+  "LastName" VARCHAR(20) NOT NULL,
+  "Company" VARCHAR(80),
+  "Address" VARCHAR(70),
+  "City" VARCHAR(40),
+  "State" VARCHAR(40),
+  "Country" VARCHAR(40),
+  "PostalCode" VARCHAR(10),
+  "Phone" VARCHAR(24),
+  "Fax" VARCHAR(24),
+  "Email" VARCHAR(60),
+  "SupportRepId" INTEGER REFERENCES "Employee"("EmployeeId")
+);
+
+CREATE TABLE IF NOT EXISTS "Track" (
+  "TrackId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "Name" VARCHAR(200) NOT NULL,
+  "AlbumId" INTEGER NOT NULL REFERENCES "Album"("AlbumId"),
+  "MediaTypeId" INTEGER NOT NULL REFERENCES "MediaType"("MediaTypeId"),
+  "GenreId" INTEGER REFERENCES "Genre"("GenreId"),
+  "Composer" VARCHAR(220),
+  "Milliseconds" INTEGER NOT NULL,
+  "Bytes" INTEGER,
+  "UnitPrice" NUMERIC(10,2) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "Invoice" (
+  "InvoiceId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "CustomerId" INTEGER NOT NULL REFERENCES "Customer"("CustomerId"),
+  "InvoiceDate" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "BillingAddress" VARCHAR(70),
+  "BillingCity" VARCHAR(40),
+  "BillingState" VARCHAR(40),
+  "BillingCountry" VARCHAR(40),
+  "BillingPostalCode" VARCHAR(10),
+  "Total" NUMERIC(10,2) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "InvoiceLine" (
+  "InvoiceLineId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "InvoiceId" INTEGER NOT NULL REFERENCES "Invoice"("InvoiceId") ON DELETE CASCADE,
+  "TrackId" INTEGER NOT NULL REFERENCES "Track"("TrackId"),
+  "UnitPrice" NUMERIC(10,2) NOT NULL,
+  "Quantity" INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "Playlist" (
+  "PlaylistId" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "Name" VARCHAR(120)
+);
+
+CREATE TABLE IF NOT EXISTS "PlaylistTrack" (
+  "PlaylistId" INTEGER NOT NULL REFERENCES "Playlist"("PlaylistId") ON DELETE CASCADE,
+  "TrackId" INTEGER NOT NULL REFERENCES "Track"("TrackId") ON DELETE CASCADE,
+  PRIMARY KEY ("PlaylistId", "TrackId")
+);

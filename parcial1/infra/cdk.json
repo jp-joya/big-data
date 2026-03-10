@@ -1,0 +1,17 @@
+{
+  "app": "python app.py",
+  "context": {
+    "prefijo": "bnd-test-",
+    "crearVpc": "true",
+    "vpcCidr": "10.50.0.0/16",
+    "maxAzs": "2",
+    "natGateways": "0",
+    "rdsVersionFull": "14.22",
+    "rdsVersionMajor": "14",
+    "keyName": "",
+    "ec2RoleArn": "",
+    "backendRoleArn": "",
+    "frontendRoleArn": "",
+    "region": "us-east-1"
+  }
+}

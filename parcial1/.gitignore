@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+.coverage
+
+# Node
+node_modules/
+dist/
+
+# Local data
+*.db
+*.sqlite
+*.sqlite3
+
+# CDK
+infra/cdk.out/
+
+# OS
+.DS_Store
