@@ -1,6 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -57,18 +58,18 @@ class Cancion(Base):
     id_tipo_media: Mapped[int] = mapped_column(
         "MediaTypeId", ForeignKey("MediaType.MediaTypeId"), nullable=False
     )
-    id_genero: Mapped[int | None] = mapped_column(
+    id_genero: Mapped[Optional[int]] = mapped_column(
         "GenreId", ForeignKey("Genre.GenreId"), nullable=True
     )
-    compositor: Mapped[str | None] = mapped_column("Composer", String(220), nullable=True)
+    compositor: Mapped[Optional[str]] = mapped_column("Composer", String(220), nullable=True)
     milisegundos: Mapped[int] = mapped_column("Milliseconds", Integer, nullable=False)
-    bytes: Mapped[int | None] = mapped_column("Bytes", Integer, nullable=True)
+    bytes: Mapped[Optional[int]] = mapped_column("Bytes", Integer, nullable=True)
     precio_unitario: Mapped[Decimal] = mapped_column(
         "UnitPrice", Numeric(10, 2), nullable=False
     )
 
     album: Mapped[Album] = relationship(back_populates="canciones")
-    genero: Mapped[Genero | None] = relationship(back_populates="canciones")
+    genero: Mapped[Optional[Genero]] = relationship(back_populates="canciones")
     tipo_media: Mapped[TipoMedia] = relationship(back_populates="canciones")
 
 
@@ -78,9 +79,9 @@ class Cliente(Base):
     id_cliente: Mapped[int] = mapped_column("CustomerId", Integer, primary_key=True)
     nombre: Mapped[str] = mapped_column("FirstName", String(40), nullable=False)
     apellido: Mapped[str] = mapped_column("LastName", String(20), nullable=False)
-    ciudad: Mapped[str | None] = mapped_column("City", String(40), nullable=True)
-    pais: Mapped[str | None] = mapped_column("Country", String(40), nullable=True)
-    correo: Mapped[str | None] = mapped_column("Email", String(60), nullable=True)
+    ciudad: Mapped[Optional[str]] = mapped_column("City", String(40), nullable=True)
+    pais: Mapped[Optional[str]] = mapped_column("Country", String(40), nullable=True)
+    correo: Mapped[Optional[str]] = mapped_column("Email", String(60), nullable=True)
 
     facturas: Mapped[list["Factura"]] = relationship(back_populates="cliente")
 
@@ -95,9 +96,9 @@ class Factura(Base):
     fecha_factura: Mapped[datetime] = mapped_column(
         "InvoiceDate", DateTime, default=datetime.utcnow, nullable=False
     )
-    direccion: Mapped[str | None] = mapped_column("BillingAddress", String(70), nullable=True)
-    ciudad: Mapped[str | None] = mapped_column("BillingCity", String(40), nullable=True)
-    pais: Mapped[str | None] = mapped_column("BillingCountry", String(40), nullable=True)
+    direccion: Mapped[Optional[str]] = mapped_column("BillingAddress", String(70), nullable=True)
+    ciudad: Mapped[Optional[str]] = mapped_column("BillingCity", String(40), nullable=True)
+    pais: Mapped[Optional[str]] = mapped_column("BillingCountry", String(40), nullable=True)
     total: Mapped[Decimal] = mapped_column("Total", Numeric(10, 2), nullable=False)
 
     cliente: Mapped[Cliente] = relationship(back_populates="facturas")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from decimal import Decimal
+from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -9,9 +10,9 @@ from app.esquemas import CancionRespuesta, ClienteRespuesta, CompraRespuesta
 
 def buscar_canciones(
     sesion: Session,
-    termino: str | None = None,
-    artista: str | None = None,
-    genero: str | None = None,
+    termino: Optional[str] = None,
+    artista: Optional[str] = None,
+    genero: Optional[str] = None,
 ) -> list[CancionRespuesta]:
     consulta = (
         select(modelos.Cancion, modelos.Artista, modelos.Genero)

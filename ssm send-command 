@@ -1,0 +1,5 @@
+{
+    "Status": "Success",
+    "StdOut": "from __future__ import annotations\nfrom datetime import datetime\nfrom decimal import Decimal\nfrom __future__ import annotations\nfrom fastapi import Depends, FastAPI, HTTPException, Query\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom __future__ import annotations\nfrom decimal import Decimal\nfrom sqlalchemy import select\n",
+    "StdErr": ""
+}

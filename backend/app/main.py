@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Optional
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -41,9 +42,9 @@ def api_clientes(
 
 @app.get("/api/canciones", response_model=list[CancionRespuesta])
 def api_buscar_canciones(
-    termino: str | None = Query(default=None, min_length=1),
-    artista: str | None = Query(default=None, min_length=1),
-    genero: str | None = Query(default=None, min_length=1),
+    termino: Optional[str] = Query(default=None, min_length=1),
+    artista: Optional[str] = Query(default=None, min_length=1),
+    genero: Optional[str] = Query(default=None, min_length=1),
     sesion: Session = Depends(obtener_sesion),
 ) -> list[CancionRespuesta]:
     return buscar_canciones(sesion, termino=termino, artista=artista, genero=genero)
