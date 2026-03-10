@@ -97,14 +97,6 @@ Para `.github/workflows/ci-cd-app.yml`:
 - `BACKEND_DATABASE_URL`
 - `FRONTEND_API_URL` (ejemplo: `http://<IP_BACKEND>:8000`)
 
-Para `.github/workflows/cdk-deploy.yml` (opcionales pero recomendados):
-
-- `BND_TEST_KEY_NAME` (key pair existente para EC2)
-- `BND_TEST_EC2_ROLE_ARN` (si quieres usar un rol existente)
-- `BND_TEST_VPC_CIDR` (por defecto `10.50.0.0/16`)
-- `BND_TEST_MAX_AZS` (por defecto `2`)
-- `BND_TEST_NAT_GATEWAYS` (por defecto `0`)
-
 ## Comandos de pruebas
 
 Backend:
