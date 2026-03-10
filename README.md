@@ -2,6 +2,7 @@
 
 Implementacion full-stack para compra de canciones basada en Chinook, con backend en FastAPI, frontend React, infraestructura completa en AWS CDK y CI/CD en GitHub Actions.
 
+
 ## Estructura
 
 - `backend/`: API FastAPI + SQLAlchemy + pruebas PyTest.
