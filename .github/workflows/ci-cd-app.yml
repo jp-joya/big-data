@@ -86,7 +86,6 @@ jobs:
           fi
 
           if [[ "$ACCESS_KEY_ID" == AKIA* ]]; then
-            # Clave permanente: ignora token para evitar token invalido.
             SESSION_TOKEN=""
           fi
 
@@ -134,26 +133,39 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
-          cat > backend-commands.json <<EOF_BACKEND
-          {
-            "commands": [
+          python3 - <<'PY'
+          import json
+          import os
+          import shlex
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          sha = os.environ["GITHUB_SHA"]
+          token = os.environ["DEPLOY_GITHUB_TOKEN"]
+          db_url = os.environ["BACKEND_DATABASE_URL"].replace("\r", "").replace("\n", "")
+
+          repo_url = f"https://x-access-token:{token}@github.com/{repo}.git"
+          linea_db = f"DATABASE_URL={db_url}"
+
+          comandos = [
               "set -euo pipefail",
               "dnf install -y git python3",
               "python3 -m ensurepip --upgrade || true",
               "python3 -m venv /opt/bnd-test/venv",
               "rm -rf /opt/bnd-test/backend-repo /opt/bnd-test/backend",
-              "git clone 'https://x-access-token:${DEPLOY_GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git' /opt/bnd-test/backend-repo",
-              "cd /opt/bnd-test/backend-repo && git checkout ${GITHUB_SHA}",
+              f"git clone {shlex.quote(repo_url)} /opt/bnd-test/backend-repo",
+              f"cd /opt/bnd-test/backend-repo && git checkout {shlex.quote(sha)}",
               "cp -r /opt/bnd-test/backend-repo/backend /opt/bnd-test/backend",
               "/opt/bnd-test/venv/bin/pip install --upgrade pip",
               "/opt/bnd-test/venv/bin/pip install -r /opt/bnd-test/backend/requirements.txt",
-              "echo 'DATABASE_URL=${BACKEND_DATABASE_URL}' > /etc/bnd-test-backend.env",
+              f"printf '%s\\n' {shlex.quote(linea_db)} > /etc/bnd-test-backend.env",
               "chown ec2-user:ec2-user /etc/bnd-test-backend.env",
               "systemctl daemon-reload",
-              "systemctl restart bnd-test-backend.service"
-            ]
-          }
-          EOF_BACKEND
+              "systemctl restart bnd-test-backend.service",
+          ]
+
+          with open("backend-commands.json", "w", encoding="utf-8") as archivo:
+              json.dump({"commands": comandos}, archivo)
+          PY
 
           COMANDO_ID=$(aws ssm send-command \
             --instance-ids "${INSTANCIA_BACKEND}" \
@@ -174,23 +186,35 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
-          cat > frontend-commands.json <<EOF_FRONTEND
-          {
-            "commands": [
+          python3 - <<'PY'
+          import json
+          import os
+          import shlex
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          sha = os.environ["GITHUB_SHA"]
+          token = os.environ["DEPLOY_GITHUB_TOKEN"]
+          api_url = os.environ["FRONTEND_API_URL"].replace("\r", "").replace("\n", "")
+
+          repo_url = f"https://x-access-token:{token}@github.com/{repo}.git"
+
+          comandos = [
               "set -euo pipefail",
               "dnf install -y git nodejs npm nginx",
               "rm -rf /opt/bnd-test/frontend-repo",
-              "git clone 'https://x-access-token:${DEPLOY_GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git' /opt/bnd-test/frontend-repo",
-              "cd /opt/bnd-test/frontend-repo && git checkout ${GITHUB_SHA}",
+              f"git clone {shlex.quote(repo_url)} /opt/bnd-test/frontend-repo",
+              f"cd /opt/bnd-test/frontend-repo && git checkout {shlex.quote(sha)}",
               "cd /opt/bnd-test/frontend-repo/frontend && npm install",
-              "cd /opt/bnd-test/frontend-repo/frontend && VITE_API_URL='${FRONTEND_API_URL}' npm run build",
+              f"cd /opt/bnd-test/frontend-repo/frontend && VITE_API_URL={shlex.quote(api_url)} npm run build",
               "rm -rf /usr/share/nginx/html/*",
               "cp -r /opt/bnd-test/frontend-repo/frontend/dist/* /usr/share/nginx/html/",
               "systemctl enable nginx",
-              "systemctl restart nginx"
-            ]
-          }
-          EOF_FRONTEND
+              "systemctl restart nginx",
+          ]
+
+          with open("frontend-commands.json", "w", encoding="utf-8") as archivo:
+              json.dump({"commands": comandos}, archivo)
+          PY
 
           COMANDO_ID=$(aws ssm send-command \
             --instance-ids "${INSTANCIA_FRONTEND}" \

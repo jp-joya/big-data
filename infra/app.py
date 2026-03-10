@@ -6,7 +6,6 @@ import aws_cdk as cdk
 
 from infraestructura_stack import ParcialStack
 
-
 def obtener_cuenta(aplicacion: cdk.App) -> str | None:
     cuenta_contexto = aplicacion.node.try_get_context("account")
     if cuenta_contexto:
