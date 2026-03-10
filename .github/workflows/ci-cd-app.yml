@@ -47,6 +47,8 @@ jobs:
         working-directory: frontend
 
   deploy-ec2:
+    env:
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
     runs-on: ubuntu-latest
     needs: [test-backend, test-frontend]
     if: github.ref == 'refs/heads/main'
@@ -54,13 +56,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configurar AWS
+      - name: Configurar AWS (credenciales temporales)
+        if: env.AWS_SESSION_TOKEN != ''
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Configurar AWS (credenciales permanentes)
+        if: env.AWS_SESSION_TOKEN == ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Validar identidad AWS
+        run: aws sts get-caller-identity
 
       - name: Desplegar backend en EC2
         env:
