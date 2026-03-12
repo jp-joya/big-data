@@ -1,36 +1,28 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 
-function validar_compra(id_cliente, id_cancion) {
-  if (!id_cliente) return "Debes seleccionar un cliente";
-  if (!id_cancion) return "Debes seleccionar una cancion";
-  return null;
-}
-
-export default function FormularioCompra({ clientes, canciones, alComprar, cargando }) {
-  const [idCliente, setIdCliente] = useState("");
-  const [idCancion, setIdCancion] = useState("");
-  const [errorLocal, setErrorLocal] = useState("");
-
-  const botonDeshabilitado = useMemo(() => cargando, [cargando]);
-
-  async function enviar_compra(evento) {
-    evento.preventDefault();
-    const error = validar_compra(idCliente, idCancion);
-    if (error) {
-      setErrorLocal(error);
-      return;
-    }
-
-    setErrorLocal("");
-    await alComprar({ id_cliente: Number(idCliente), id_cancion: Number(idCancion) });
-  }
-
+export default function FormularioCompra({
+  clientes,
+  carrito,
+  idClienteSeleccionado,
+  total,
+  cargando,
+  onCambiarCliente,
+  onCambiarCantidad,
+  onQuitarDelCarrito,
+  onVaciarCarrito,
+  onComprarCarrito,
+  formatoPrecio
+}) {
   return (
-    <form onSubmit={enviar_compra} className="tarjeta" aria-label="formulario-compra">
-      <h2>Comprar cancion</h2>
+    <section className="tarjeta" aria-label="panel-carrito">
+      <div className="cabecera-tarjeta">
+        <h2>Carrito de compra</h2>
+        <span>{carrito.length} cancion(es) distinta(s)</span>
+      </div>
+
       <label>
-        Cliente
-        <select value={idCliente} onChange={(e) => setIdCliente(e.target.value)}>
+        Cliente para facturar
+        <select value={idClienteSeleccionado} onChange={(e) => onCambiarCliente(e.target.value)}>
           <option value="">Seleccione cliente</option>
           {clientes.map((cliente) => (
             <option key={cliente.id_cliente} value={cliente.id_cliente}>
@@ -39,21 +31,67 @@ export default function FormularioCompra({ clientes, canciones, alComprar, carga
           ))}
         </select>
       </label>
-      <label>
-        Cancion
-        <select value={idCancion} onChange={(e) => setIdCancion(e.target.value)}>
-          <option value="">Seleccione cancion</option>
-          {canciones.map((cancion) => (
-            <option key={cancion.id_cancion} value={cancion.id_cancion}>
-              {cancion.nombre} - {cancion.artista}
-            </option>
-          ))}
-        </select>
-      </label>
-      {errorLocal ? <p className="alerta error">{errorLocal}</p> : null}
-      <button type="submit" disabled={botonDeshabilitado}>
-        {cargando ? "Procesando..." : "Comprar"}
-      </button>
-    </form>
+
+      <div className="lista-carrito" aria-live="polite">
+        {carrito.length === 0 ? (
+          <p className="carrito-vacio">Aun no has agregado canciones.</p>
+        ) : (
+          carrito.map((item) => (
+            <article key={item.id_cancion} className="item-carrito">
+              <div>
+                <strong>{item.nombre}</strong>
+                <p>{item.artista}</p>
+              </div>
+
+              <div className="controles-cantidad">
+                <button
+                  type="button"
+                  className="boton-icono"
+                  onClick={() => onCambiarCantidad(item.id_cancion, -1)}
+                  aria-label={`Disminuir cantidad de ${item.nombre}`}
+                >
+                  -
+                </button>
+                <span>{item.cantidad}</span>
+                <button
+                  type="button"
+                  className="boton-icono"
+                  onClick={() => onCambiarCantidad(item.id_cancion, 1)}
+                  aria-label={`Aumentar cantidad de ${item.nombre}`}
+                >
+                  +
+                </button>
+              </div>
+
+              <div className="item-total">
+                <strong>{formatoPrecio(item.precio_unitario * item.cantidad)}</strong>
+                <button
+                  type="button"
+                  className="boton-texto"
+                  onClick={() => onQuitarDelCarrito(item.id_cancion)}
+                >
+                  Quitar
+                </button>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+
+      <footer className="resumen-carrito">
+        <div>
+          <span>Total</span>
+          <strong>{formatoPrecio(total)}</strong>
+        </div>
+        <div className="acciones-formulario">
+          <button type="button" className="boton-secundario" onClick={onVaciarCarrito}>
+            Vaciar
+          </button>
+          <button type="button" onClick={onComprarCarrito} disabled={cargando}>
+            {cargando ? "Confirmando..." : "Comprar carrito"}
+          </button>
+        </div>
+      </footer>
+    </section>
   );
 }

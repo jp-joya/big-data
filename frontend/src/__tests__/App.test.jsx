@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App";
 
@@ -13,7 +13,8 @@ function mockRespuesta(data, ok = true, status = 200) {
 
 describe("App", () => {
   beforeEach(() => {
-    global.fetch = vi.fn()
+    global.fetch = vi
+      .fn()
       .mockImplementationOnce(() => mockRespuesta([{ id_cliente: 1, nombre_completo: "Ana Lopez" }]))
       .mockImplementationOnce(() =>
         mockRespuesta([
@@ -31,14 +32,14 @@ describe("App", () => {
   it("muestra resultados iniciales", async () => {
     render(<App />);
 
-    expect(screen.getByText("Parcial 1")).toBeInTheDocument();
+    expect(screen.getByText("Tienda Chinook")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText("Thunderstruck")).toBeInTheDocument();
     });
   });
 
-  it("valida formulario de compra en frontend", async () => {
+  it("agrega cancion al carrito y valida cliente antes de comprar", async () => {
     const usuario = userEvent.setup();
     render(<App />);
 
@@ -46,7 +47,12 @@ describe("App", () => {
       expect(screen.getByText("Thunderstruck")).toBeInTheDocument();
     });
 
-    await usuario.click(screen.getByRole("button", { name: "Comprar" }));
-    expect(screen.getByText("Debes seleccionar un cliente")).toBeInTheDocument();
+    await usuario.click(screen.getByRole("button", { name: "Agregar" }));
+
+    const panelCarrito = screen.getByLabelText("panel-carrito");
+    expect(within(panelCarrito).getByText("Thunderstruck")).toBeInTheDocument();
+
+    await usuario.click(screen.getByRole("button", { name: "Comprar carrito" }));
+    expect(screen.getByText("Selecciona un cliente para comprar.")).toBeInTheDocument();
   });
 });

@@ -1,10 +1,18 @@
 const URL_API = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 async function manejar_respuesta(respuesta) {
-  const data = await respuesta.json();
+  let data = {};
+
+  try {
+    data = await respuesta.json();
+  } catch {
+    data = {};
+  }
+
   if (!respuesta.ok) {
     throw new Error(data.detail ?? "Error inesperado en API");
   }
+
   return data;
 }
 
